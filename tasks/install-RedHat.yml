@@ -1,0 +1,14 @@
+---
+- name: RHEL | Install needed packages
+  yum:
+    name: "{{ item }}"
+    state: latest
+    enablerepo: epel-testing
+  with_items:
+    - python-pip
+    - ansible
+    - git
+  tags:
+    - ansiblepull
+    - packages
+    - yum

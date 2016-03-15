@@ -1,0 +1,25 @@
+---
+ansiblepull_workdir: "/var/lib/ansible/local"
+ansiblepull_repo: "https://gitub.com/foo/bar.git"
+ansiblepull_playbook: "{{ ansiblepull_workdir }}/site.yml"
+ansiblepull_logfile: "/var/log/ansible-pull.log"
+
+ansiblepull_vault_password_file: "/root/.vault"
+# ansiblepull_vault_password: "SuperSecretKey"
+# ansiblepull_ssh_private_key: |
+#   -----BEGIN RSA PRIVATE KEY-----
+#   Private goes here
+#   -----END RSA PRIVATE KEY-----
+
+# ansiblepull_known_hosts:
+#   - name: "foo.acme.com"
+#     state: present
+#     key: "foo.acme.com ssh-rsa AAAAB3NzaC1...
+
+ansiblepull_cron:
+  - name: "run ansible-pull"
+    hour: "*"
+    minute: "*/10"
+    day: "*"
+    state: present
+    job: "ansible-pull --accept-host-key -d {{ ansiblepull_workdir }} --full -o -U {{ ansiblepull_repo }} {%if ansiblepull_vault_password is defined %}--vault-password-file={{ ansiblepull_vault_password_file }}{% endif %} {{ ansiblepull_playbook }} 2>&1 >> {{ ansiblepull_logfile }}"

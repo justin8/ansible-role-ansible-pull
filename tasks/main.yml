@@ -1,0 +1,139 @@
+---
+- name: Include distribution specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+  tags:
+    - ansiblepull
+    - packages
+    - yum
+    - apt
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Install Python packages
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - jinja2
+  tags:
+    - ansiblepull
+    - packages
+    - pip
+
+- name: Create directory for Ansible repository
+  file:
+    dest: "{{ ansiblepull_workdir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - ansiblepull
+
+- name: Copy logrotate settings
+  template:
+    src: ansible-logrotate.j2
+    dest: /etc/logrotate.d/ansible-pull
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - ansiblepull
+    - ansiblepull-logrotate
+
+- name: Copy ansible.cfg
+  template:
+    src: ansible.cfg.j2
+    dest: /root/.ansible.cfg
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - ansiblepull
+    - ansiblepull-config
+
+- name: Copy vault password file
+  template:
+    src: vault.j2
+    dest: "{{ ansiblepull_vault_password_file }}"
+    owner: root
+    group: root
+    mode: 0600
+  when: ansiblepull_vault_password is defined
+  tags:
+    - ansiblepull
+    - ansiblepull-vault
+
+- name: Generate SSH key for root
+  user:
+    name: root
+    generate_ssh_key: yes
+  register: _ssh_key_generation
+  when: ansiblepull_ssh_private_key is not defined
+  tags:
+    - ansiblepull
+    - ansiblepull-ssh
+
+- name: Create .ssh folder for root
+  file:
+    path: "/root/.ssh"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  when: ansiblepull_ssh_private_key is defined
+  tags:
+    - ansiblepull
+    - ansiblepull-ssh
+
+- name: Copy SSH private key for root
+  template:
+    src: id_rsa.j2
+    dest: /root/.ssh/id_rsa
+    owner: root
+    group: root
+    mode: 0600
+  when: ansiblepull_ssh_private_key is defined
+  tags:
+    - ansiblepull
+    - ansiblepull-ssh
+
+- name: Add host keys to known_hosts
+  known_hosts:
+    name: "{{ item.name }}"
+    key: "{{ item.key }}"
+    state: "{{ item.state }}"
+  with_items: "{{ ansiblepull_known_hosts | default([]) }}"
+  tags:
+    - ansiblepull
+    - ansiblepull-ssh
+
+- name: Start and enable cron
+  service:
+    name: "{{ cron_service }}"
+    enabled: True
+    state: started
+  tags:
+    - ansiblepull
+    - ansiblepull-cron
+
+- name: Create cron job to run ansible-pull
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day }}"
+    job: "{{ item.job }}"
+    state: "{{ item.state }}"
+  with_items: "{{ ansiblepull_cron }}"
+  tags:
+    - ansiblepull
+    - ansiblepull-cron
+
+- name: Display ssh pulic key
+  debug:
+    msg: "Here is the public key that needs to be placed on the remote git server: {{ _ssh_key_generation.ssh_public_key }}"
+  when: _ssh_key_generation.changed
+  tags:
+    - ansiblepull
+    - ansiblepull-ssh
