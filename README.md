@@ -1,6 +1,7 @@
 Ansible Pull
 =========
-[![Galaxy](https://img.shields.io/badge/galaxy-samdoran.ansible--pull-blue.svg?style=flat)](https://galaxy.ansible.com/samdoran/ansible-pull)    
+[![Build Status](https://travis-ci.org/samdoran/ansible-role-ansible-pull.svg?branch=master)](https://travis-ci.org/samdoran/ansible-role-ansible-pull)
+[![Galaxy](https://img.shields.io/badge/galaxy-samdoran.ansible--pull-blue.svg?style=flat)](https://galaxy.ansible.com/samdoran/ansible-pull)
 
 Use `ansible` in push mode to configure a remote machine to run `ansible-pull` as `root` on a schedule.
 
