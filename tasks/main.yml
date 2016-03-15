@@ -3,11 +3,17 @@
   include_vars: "{{ ansible_os_family }}.yml"
   tags:
     - ansiblepull
+    - ansiblepull-cron
     - packages
     - yum
     - apt
 
 - include: "install-{{ ansible_os_family }}.yml"
+  tags:
+    - ansiblepull
+    - packages
+    - yum
+    - apt
 
 - name: Install Python packages
   pip:
