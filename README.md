@@ -1,5 +1,6 @@
 Ansible Pull
 =========
+[![Galaxy](https://img.shields.io/badge/galaxy-samdoran.ansible--pull-blue.svg?style=flat)](https://galaxy.ansible.com/samdoran/ansible-pull)    
 
 Use `ansible` in push mode to configure a remote machine to run `ansible-pull` as `root` on a schedule.
 
@@ -11,6 +12,8 @@ Requirements
 
 Role Variables
 --------------
+
+At a minimum, you need to define `ansiblepull_repo` where your Ansible playbook repostiory lives as well as the `ansiblepull_playbook` to run.
 
 | Name              | Default Value       | Description          |
 |-------------------|---------------------|----------------------|
@@ -33,11 +36,19 @@ Dependencies
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+Here is a playbook using an internal GitLab server with the `pull.yml` playbook. We also set the SSH key of the internal GitLab server to avoid any problems.
 
     - name: Setup Ansible Pull
       hosts: all
       become: True
+
+      vars:
+        ansiblepull_playbook: "{{ ansiblepull_workdir }}/playbooks/pull.yml"
+        ansiblepull_repo: "git@gitlab.acme.com/internal.git"
+        ansiblepull_known_hosts:
+          - name: "gitlab.acme.com"
+            state: present
+            key: "gitlab.acme.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCEPm0nPQBk+W4FBWSuI2wP0vO2W5cfDQV3B65WayiQPCh5kQIaTfDaRXIHACu9GcZRx5mhTsXYt+jY2egvLwazX5xvvQqDZX7wLw+qJXnpb1pqS7koINnAopGspp5v/+KPk7e3SRbLdNDk8O/g7uXb1PwaryebQM2+eluDebh1zbDd2QgKHf1/p4gZ66m4QJ9s17+Qzj3AJO+5fNr9z0MxPkYkf3jLvJ8PmAqGT+6AYlAh889yCrrC+yGj7VH/H6P3dEakj2xEx3Ib4g42EjKOpumoCVLY6dKrtSlkyOVBEOkf7G3liIV2ZNm6smWsJsnCTMPy4o9ioxF+x5GG1nsL"
 
       roles:
         - samdoran.repo-epel
