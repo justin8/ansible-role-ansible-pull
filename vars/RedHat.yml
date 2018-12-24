@@ -1,2 +1,5 @@
----
 cron_service: crond
+ansible_pull_packages:
+  - python-pip
+  - ansible
+  - git

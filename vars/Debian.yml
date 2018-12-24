@@ -1,2 +1,6 @@
----
 cron_service: cron
+ansible_pull_packages:
+  - python-pip
+  - ansible
+  - git
+  - software-properties-common

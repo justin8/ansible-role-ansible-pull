@@ -1,10 +1,9 @@
----
 - name: DEBIAN | Add repository
   apt_repository:
     repo: "ppa:ansible/ansible"
     state: present
   tags:
-    - ansiblepull
+    - ansible_pull
     - packages
     - apt
 
@@ -12,13 +11,9 @@
   apt:
     name: "{{ item }}"
     state: latest
-    update_cache: yes
-  with_items:
-    - python-pip
-    - ansible
-    - git
-    - software-properties-common
+    update_cache: true
+  loop: "{{ ansible_pull_packages }}"
   tags:
-    - ansiblepull
+    - ansible_pull
     - packages
     - apt

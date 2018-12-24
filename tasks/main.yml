@@ -1,16 +1,15 @@
----
 - name: Include distribution specific variables
   include_vars: "{{ ansible_os_family }}.yml"
   tags:
-    - ansiblepull
-    - ansiblepull-cron
+    - ansible_pull
+    - ansible_pull_cron
     - packages
     - yum
     - apt
 
 - include: "install-{{ ansible_os_family }}.yml"
   tags:
-    - ansiblepull
+    - ansible_pull
     - packages
     - yum
     - apt
@@ -19,22 +18,22 @@
   pip:
     name: "{{ item }}"
     state: latest
-  with_items:
+  loop:
     - jinja2
   tags:
-    - ansiblepull
+    - ansible_pull
     - packages
     - pip
 
 - name: Create directory for Ansible repository
   file:
-    dest: "{{ ansiblepull_workdir }}"
+    dest: "{{ ansible_pull_workdir }}"
     state: directory
     owner: root
     group: root
-    mode: 0700
+    mode: '0700'
   tags:
-    - ansiblepull
+    - ansible_pull
 
 - name: Copy logrotate settings
   template:
@@ -42,10 +41,10 @@
     dest: /etc/logrotate.d/ansible-pull
     owner: root
     group: root
-    mode: 0644
+    mode: '0644'
   tags:
-    - ansiblepull
-    - ansiblepull-logrotate
+    - ansible_pull
+    - ansible_pull_logrotate
 
 - name: Copy ansible.cfg
   template:
@@ -53,32 +52,32 @@
     dest: /root/.ansible.cfg
     owner: root
     group: root
-    mode: 0700
+    mode: '0700'
   tags:
-    - ansiblepull
-    - ansiblepull-config
+    - ansible_pull
+    - ansible_pull_config
 
 - name: Copy vault password file
   template:
     src: vault.j2
-    dest: "{{ ansiblepull_vault_password_file }}"
+    dest: "{{ ansible_pull_vault_password_file }}"
     owner: root
     group: root
-    mode: 0600
-  when: ansiblepull_vault_password is defined
+    mode: '0600'
+  when: ansible_pull_vault_password is defined
   tags:
-    - ansiblepull
-    - ansiblepull-vault
+    - ansible_pull
+    - ansible_pull_vault
 
 - name: Generate SSH key for root
   user:
     name: root
-    generate_ssh_key: yes
+    generate_ssh_key: true
   register: _ssh_key_generation
-  when: ansiblepull_ssh_private_key is not defined
+  when: ansible_pull_ssh_private_key is not defined
   tags:
-    - ansiblepull
-    - ansiblepull-ssh
+    - ansible_pull
+    - ansible_pull_ssh
 
 - name: Create .ssh folder for root
   file:
@@ -86,11 +85,11 @@
     state: directory
     owner: root
     group: root
-    mode: 0700
-  when: ansiblepull_ssh_private_key is defined
+    mode: '0700'
+  when: ansible_pull_ssh_private_key is defined
   tags:
-    - ansiblepull
-    - ansiblepull-ssh
+    - ansible_pull
+    - ansible_pull_ssh
 
 - name: Copy SSH private key for root
   template:
@@ -98,30 +97,30 @@
     dest: /root/.ssh/id_rsa
     owner: root
     group: root
-    mode: 0600
-  when: ansiblepull_ssh_private_key is defined
+    mode: '0600'
+  when: ansible_pull_ssh_private_key is defined
   tags:
-    - ansiblepull
-    - ansiblepull-ssh
+    - ansible_pull
+    - ansible_pull_ssh
 
 - name: Add host keys to known_hosts
   known_hosts:
     name: "{{ item.name }}"
     key: "{{ item.key }}"
     state: "{{ item.state }}"
-  with_items: "{{ ansiblepull_known_hosts | default([]) }}"
+  loop: "{{ ansible_pull_known_hosts | default([]) }}"
   tags:
-    - ansiblepull
-    - ansiblepull-ssh
+    - ansible_pull
+    - ansible_pull_ssh
 
 - name: Start and enable cron
   service:
     name: "{{ cron_service }}"
-    enabled: True
+    enabled: true
     state: started
   tags:
-    - ansiblepull
-    - ansiblepull-cron
+    - ansible_pull
+    - ansible_pull_cron
 
 - name: Create cron job to run ansible-pull
   cron:
@@ -131,15 +130,15 @@
     day: "{{ item.day }}"
     job: "{{ item.job }}"
     state: "{{ item.state }}"
-  with_items: "{{ ansiblepull_cron }}"
+  loop: "{{ ansible_pull_cron }}"
   tags:
-    - ansiblepull
-    - ansiblepull-cron
+    - ansible_pull
+    - ansible_pull_cron
 
 - name: Display ssh pulic key
   debug:
     msg: "Here is the public key that needs to be placed on the remote git server: {{ _ssh_key_generation.ssh_public_key }}"
-  when: _ssh_key_generation.changed
+  when: _ssh_key_generation is changed
   tags:
-    - ansiblepull
-    - ansiblepull-ssh
+    - ansible_pull
+    - ansible_pull_ssh
